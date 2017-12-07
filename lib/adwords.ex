@@ -1,14 +1,11 @@
 defmodule Adwords do
 	@config Application.get_env(:adwords, :adwords)
 	
-	def test do 
-		gclid = "CjwKCAiAxarQBRAmEiwA6YcGKKoG6zRuVf8tjW1PEnggY9WxH_qqIuoRVkVVlvlELuTL_nU_AxU7qxoC_G0QAvD_BwE"
-		date = DateTime.utc_now |> convert
-		name = "QualifiedLead"
-		value = "70"
-		currency = "EUR"
-		upload(date,name,value,currency, gclid)
-	end
+	#def test do 
+	#	gclid = "CjwKCAiAxarQBRAmEiwA6YcGKKoG6zRuVf8tjW1PEnggY9WxH_qqIuoRVkVVlvlELuTL_nU_AxU7qxoC_G0QAvD_BwE"
+
+	#	upload(DateTime.utc_now,"QualifiedLead","70","EUR", gclid)
+	#end
 	
 	def upload(date, nil), do: nil
 	
@@ -23,7 +20,7 @@ defmodule Adwords do
 		headers = [{"Content-Type", "application/soap+xml"},{"Authorization", "Bearer #{access_token}"}]
 		namespace = "https://adwords.google.com/api/adwords/cm/v201702"
 		header = [{"soapenv:Header",[{"ns1:RequestHeader", "xmlns:ns1='#{namespace}'",[{"ns1:clientCustomerId",@config[:client_customer_id]},{"ns1:developerToken", @config[:developer_token]},{"ns1:userAgent", @config[:user_agent]},{"ns1:validateOnly", "false"},{"ns1:partialFailure", "false"}]|> format }] |> name_format}]|> format		
-		body = [{"soapenv:Body", [{"mutate", "xmlns='#{namespace}'", [{"operations", [[{"operator", "ADD"}] |> format,[{"operand", [{"googleClickId",gclid},{"conversionName", name},{"conversionTime", time},{"conversionValue",value},{"conversionCurrencyCode", currency}]|> format}] |> format]}] |> format_list}] |> name_format}]|> format
+		body = [{"soapenv:Body", [{"mutate", "xmlns='#{namespace}'", [{"operations", [[{"operator", "ADD"}] |> format,[{"operand", [{"googleClickId",gclid},{"conversionName", name},{"conversionTime", time |> convert},{"conversionValue",value},{"conversionCurrencyCode", currency}]|> format}] |> format]}] |> format_list}] |> name_format}]|> format
 		payload = ["<?xml version='1.0'?>",[{"soapenv:Envelope", "xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'", [header,body]}]|> format_list_name] |> List.to_string
 		url = "https://adwords.google.com/api/adwords/cm/v201702/OfflineConversionFeedService"
 		HTTPoison.post(url, payload , headers)
